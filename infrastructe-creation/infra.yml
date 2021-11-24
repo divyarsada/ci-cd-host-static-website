@@ -158,9 +158,9 @@ Resources:
     BastionInstance:
         Type: AWS::EC2::Instance
         Properties:
-              ImageId: ami-04902260ca3d33422 # ImageID valid only in us-east-1 region
+              ImageId: ami-04902260ca3d33422 
               InstanceType: t2.micro
-              KeyName: tier-1 # <-- Change to use your key-pair name
+              KeyName: tier-1
               NetworkInterfaces: 
                   - AssociatePublicIpAddress: "true"
                     DeviceIndex: "0"
@@ -186,10 +186,37 @@ Resources:
                   FromPort: 22
                   ToPort: 22
                   CidrIp: 0.0.0.0/0
-
     
+    S3ReadOnlyEC2:
+        Type: 'AWS::IAM::Role'
+        Properties:
+          AssumeRolePolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Principal:
+                  Service:
+                  - ec2.amazonaws.com
+                Action:
+                  - 'sts:AssumeRole'
+          Path: /
+          Policies:
+            - PolicyName: S3readonlyaccess
+              PolicyDocument:
+                Version: 2012-10-17
+                Statement:
+                  - Effect: Allow
+                    Action: 
+                      - "s3:ListBucket"
+                      - "s3:GetObject*"
+                    Resource: '*'             
     
-    
+    ProfileWithRolesForOurApp:
+        Type: AWS::IAM::InstanceProfile
+        Properties: 
+            Roles: 
+              - !Ref "S3ReadOnlyEC2"
+              
     WebServerSecGroup:
         Type: AWS::EC2::SecurityGroup
         Properties:
@@ -234,10 +261,16 @@ Resources:
             #!/bin/bash
             sudo yum update
             sudo yum install -y httpd
+            sudo yum install unzip awscli -y
             cd /var/www/html
-            echo "Hi" > /var/www/html/index.html
+            aws s3 cp s3://static-webapp-pactra-project/index.html .
             systemctl start httpd
-            
+            DD_AGENT_MAJOR_VERSION=7 DD_API_KEY=7b03b884eba1909096c8692be12581c0 DD_SITE="datadoghq.com" bash -c "$(curl -L https://s3.amazonaws.com/dd-agent/scripts/install_script.sh)"
+            sudo systemctl start datadog-agent
+            sudo systemctl status datadog-agent
+            DD_INSTALL_ONLY=true
+        
+        IamInstanceProfile: !Ref 'ProfileWithRolesForOurApp'     
         KeyName: tier-1
         ImageId: ami-04902260ca3d33422
         SecurityGroups:
@@ -256,7 +289,7 @@ Resources:
           - Ref: 'PrivateSubnet2'
         LaunchConfigurationName: !Ref "WebAppLaunchConfig"
         MaxSize: "4"
-        MinSize: "1"
+        MinSize: "2"
         TargetGroupARNs: 
           - Ref: "WebAppTargetGroup"
     WebAppLB:
