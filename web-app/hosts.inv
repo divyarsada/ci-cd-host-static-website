@@ -1,2 +1,2 @@
 [webservers]
-10.0.2.210 ansible_user=ec2-user ansible_ssh_private_key_file=/home/ec2-user/tier-1.pem
+10.0.2.210 ansible_ssh_user=ec2-user ansible_ssh_private_key_file=/home/ec2-user/tier-1.pem
