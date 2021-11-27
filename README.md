@@ -5,6 +5,7 @@
 Creating a Cloud Formation template to setup the infrastructure needed to deploy an highly available static web application and create the ci/cd pipeline for deploying the application. Finally access the application using public URL of the LoadBalancer.
 
 ### Architecture Diagram
+
 The resources to be created are as follows:
 
     * VPC to create a own private cloud that is isolated from other networks within the AWS cloud
