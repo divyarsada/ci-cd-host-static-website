@@ -35,8 +35,3 @@ The resources to be created are as follows:
     * hosts.inv: Inventory consisting of the target servers ip address and user details
     * Jenkinsfile: Contains the pipleline code for deploying the static application to taget servers whenever the new changes are made to the index.html file
     * datadog-monitors: Consists of the terraform modules that defines the resources and use terraform apply command to deploy monitors in datadog
-    
-    
-    
-    
-    
